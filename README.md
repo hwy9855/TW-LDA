@@ -19,3 +19,7 @@ For a doc created using Unigram Model, the probability that the doc to be create
 $$p(\vec{w}) = p(w_1, w_2, ..., w_n) = p(w_1)p(w_2)...p(w_n)$$
 And for the hypothesis that each doc is independent, a corpus with some doc $W = (\vec{w_1}),(\vec{w_2}),...,(\vec{w_m})$, the probability is
 $$p(W) = p(\vec{w_1})p(\vec{w_2})...p(\vec{w_m})$$
+
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
