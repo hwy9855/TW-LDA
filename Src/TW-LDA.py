@@ -8,12 +8,15 @@ def init():
     return dpre
 
 def Stdlda(dpre):
+    print("Start Step1 :")
     ldaModel = LDA.StandardLDA(dpre, 1, 0.1, 20, 1000)
     ldaModel.train(dpre)
     ldaModel.saveresult()
+    print("Step1 Done\n")
     return ldaModel
 
 def _bcd(ldaModel):
+    print("Start Step2 :")
     ldaModel._phidot()
     bcd = np.zeros(ldaModel.dpre.words_count)
     for i in range(ldaModel.dpre.words_count):
@@ -27,23 +30,21 @@ def _bcd(ldaModel):
         tmp = 1 + tmp / np.log2(ldaModel.K)
         bcd[i] = tmp
     np.savetxt('../Res/bcd.txt', bcd)
+    print("Step2 Done\n")
     return bcd
 
 def des(dpre, bcd):
-    dpre.avgtw = 0
+    print("Start Step3 :")
     for i in range(dpre.words_count):
-        if bcd[i] > dpre.avgtw:
-            dpre.avgtw = bcd[i]
-    arg = 1 / dpre.avgtw
-    print(arg)
-    for i in range(dpre.words_count):
-        dpre.tw[i] = bcd[i] * arg
-    print(dpre.avgtw)
+        dpre.tw[i] = bcd[i]
+    print("Step3 Done\n")
 
 def xlda(dpre):
+    print("Start Step4 :")
     xlda = LDA.StandardLDA(dpre, 1, 0.1, 20, 1500)
     xlda.train(dpre)
     xlda.saveresult()
+    print("Step4 Done\n")
     return xlda
 
 def main():

@@ -11,12 +11,10 @@ class DataPreProcessing(object):
         self.docs_count = 0
         self.docs = []
         self.tw = np.zeros(self.words_count)
-        self.avgtw = 1
 
 
 def preprocessing(filename):
     dpre = DataPreProcessing()
-    print("input data.")
     input = open(filename)
     docs = input.readlines()
     input.close()

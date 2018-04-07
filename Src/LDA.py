@@ -16,10 +16,10 @@ class StandardLDA():
         self.K = K
         self.iter = iter
         self.p = np.zeros(self.K)
-        self.nw = np.zeros((self.dpre.words_count,self.K),dtype="int")
-        self.nwsum = np.zeros(self.K,dtype="int")
-        self.nd = np.zeros((self.dpre.docs_count,self.K),dtype="int")
-        self.ndsum = np.zeros(dpre.docs_count,dtype="int")
+        self.nw = np.zeros((self.dpre.words_count,self.K),dtype="float")
+        self.nwsum = np.zeros(self.K,dtype="float")
+        self.nd = np.zeros((self.dpre.docs_count,self.K),dtype="float")
+        self.ndsum = np.zeros(dpre.docs_count,dtype="float")
         self.Z = np.array([ [0 for y in range(dpre.docs[x].length)] for x in range(dpre.docs_count)])
 
         for x in range(len(self.Z)):
@@ -66,7 +66,7 @@ class StandardLDA():
 
         Vbeta = self.dpre.words_count * self.beta
         Kalpha = self.K * self.alpha
-        self.p = (self.nw[word] + self.alpha) / (self.nwsum + Kalpha) * (self.nd[i] + self.beta) / (self.ndsum[i] + Vbeta)
+        self.p = (self.nw[word] + self.beta) / (self.nwsum + Vbeta) * (self.nd[i] + self.alpha) / (self.ndsum[i] + Kalpha)
         #print(self.p)
         for k in range(1, self.K):
             self.p[k] += self.p[k-1]
@@ -107,7 +107,7 @@ class StandardLDA():
                 twords = [(n, self.phi[x][n]) for n in range(self.dpre.words_count)]
                 twords.sort(key=lambda i: i[1], reverse=True)
                 for y in range(self.dpre.words_count):
-                    word = str(twords[y][0])
+                    word = str(self.id2word[twords[y][0]])
                     f.write('\t' + word + '\t' * 3 + str(twords[y][1]) + '\n')
 
         with open('../Res/tassgin.txt','w') as f:
@@ -123,6 +123,7 @@ class StandardLDA():
                 for j in range(self.dpre.docs[i].length):
                     topic = self.Gibbs(dpre, i, j)
                     self.Z[i][j] = topic
-            print(x)
+            if (x % (self.iter / 100)) == 0:
+                print(str(x / (self.iter / 100)) + "%")
         self._theta()
         self._phi()
