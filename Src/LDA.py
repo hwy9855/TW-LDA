@@ -23,16 +23,20 @@ class StandardLDA():
         self.Z = np.array([ [0 for y in range(dpre.docs[x].length)] for x in range(dpre.docs_count)])
 
         for x in range(len(self.Z)):
-            self.ndsum[x] = self.dpre.docs[x].length
             for y in range(self.dpre.docs[x].length):
                 topic = np.random.randint(0,self.K-1)
+                word = self.dpre.docs[x].words[y]
+                tw = dpre.tw[word]
                 self.Z[x][y] = topic
-                self.nw[self.dpre.docs[x].words[y]][topic] += 1
-                self.nd[x][topic] += 1
-                self.nwsum[topic] += 1
+                self.ndsum[x] += tw
+                self.nw[word][topic] += tw
+                self.nd[x][topic] += tw
+                self.nwsum[topic] += tw
 
         self.theta = np.array([ [0.0 for y in range(self.K)] for x in range(self.dpre.docs_count) ])
         self.phi = np.array([ [ 0.0 for y in range(self.dpre.words_count) ] for x in range(self.K)])
+        self.phidot = np.array([ [ 0.0 for y in range(self.dpre.words_count) ] for x in range(self.K)])
+        self.fc = np.zeros(self.K)
 
     def _theta(self):
         for i in range(self.dpre.docs_count):
@@ -42,30 +46,42 @@ class StandardLDA():
         for i in range(self.K):
             self.phi[i] = (self.nw.T[i] + self.beta) / (self.nwsum[i]+self.dpre.words_count * self.beta)
 
-    def Gibbs(self, i, j):
+    def _phidot(self):
+        for x in range(self.dpre.docs_count):
+            for y in range(self.dpre.docs[x].length):
+                self.phidot[self.Z[x][y]][self.dpre.docs[x].words[y]] += 1
+        for i in range(self.K):
+            for j in range(self.dpre.words_count):
+                self.phidot[i][j] = self.phidot[i][j] / self.fc[i]
+
+    def Gibbs(self, dpre, i, j):
 
         topic = self.Z[i][j]
         word = self.dpre.docs[i].words[j]
-        self.nw[word][topic] -= 1
-        self.nd[i][topic] -= 1
-        self.nwsum[topic] -= 1
-        self.ndsum[i] -= 1
+        tw = dpre.tw[word]
+        self.nw[word][topic] -= tw
+        self.nd[i][topic] -= tw
+        self.nwsum[topic] -= tw
+        self.ndsum[i] -= tw
 
         Vbeta = self.dpre.words_count * self.beta
         Kalpha = self.K * self.alpha
-        self.p = (self.nw[word] + self.beta) / (self.nwsum + Vbeta) * (self.nd[i] + self.alpha) / (self.ndsum[i] + Kalpha)
-        for k in range(1,self.K):
+        self.p = (self.nw[word] + self.alpha) / (self.nwsum + Kalpha) * (self.nd[i] + self.beta) / (self.ndsum[i] + Vbeta)
+        #print(self.p)
+        for k in range(1, self.K):
             self.p[k] += self.p[k-1]
 
         u = np.random.uniform(0,self.p[self.K-1])
+        #if dpre.avgtw != 1:
+        #    print(self.p, u)
         for topic in range(self.K):
             if self.p[topic]>u:
                 break
 
-        self.nw[word][topic] +=1
-        self.nwsum[topic] +=1
-        self.nd[i][topic] +=1
-        self.ndsum[i] +=1
+        self.nw[word][topic] += tw
+        self.nwsum[topic] += tw
+        self.nd[i][topic] += tw
+        self.ndsum[i] += tw
 
         return topic
 
@@ -83,7 +99,6 @@ class StandardLDA():
                 line = line.split('\'')
                 line.pop()
                 self.id2word.append(line)
-            print(self.id2word[0])
 
         with open('../Res/topic_id.txt', 'w',) as f:
             for x in range(self.K):
@@ -99,13 +114,14 @@ class StandardLDA():
             for x in range(self.dpre.docs_count):
                 for y in range(self.dpre.docs[x].length):
                     f.write(str(self.dpre.docs[x].words[y])+':'+str(self.Z[x][y]) + '\t')
+                    self.fc[self.Z[x][y]] += 1
                 f.write('\n')
 
-    def train(self):
+    def train(self, dpre):
         for x in range(self.iter):
             for i in range(self.dpre.docs_count):
                 for j in range(self.dpre.docs[i].length):
-                    topic = self.Gibbs(i,j)
+                    topic = self.Gibbs(dpre, i, j)
                     self.Z[i][j] = topic
             print(x)
         self._theta()

@@ -1,3 +1,5 @@
+import numpy as np
+
 class Document(object):
     def __init__(self):
         self.words = []
@@ -8,6 +10,8 @@ class DataPreProcessing(object):
         self.words_count = 1230
         self.docs_count = 0
         self.docs = []
+        self.tw = np.zeros(self.words_count)
+        self.avgtw = 1
 
 
 def preprocessing(filename):
@@ -28,4 +32,6 @@ def preprocessing(filename):
         else:
             pass
     dpre.docs_count = len(dpre.docs)
+    for i in range(dpre.words_count):
+        dpre.tw[i] = 1
     return dpre
